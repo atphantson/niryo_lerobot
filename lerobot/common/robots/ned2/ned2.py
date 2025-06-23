@@ -1,4 +1,4 @@
-# Copyright 2024 The Phantson Technologies Inc. team. All rights reserved.
+# Copyright 2025 The Phantson Technologies Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,9 @@
 # limitations under the License.
 
 import logging
+import os
+import subprocess
+import sys
 import time
 from functools import cached_property
 from typing import Any
@@ -96,16 +99,25 @@ class Ned2(Robot):
 
     @property
     def is_calibrated(self) -> bool:
-        return self.bus.is_calibrated
+        steppers = [name for name, m in self.bus.motors.items() if m.model == "stepper"]
+        if len(steppers) != 3:
+            return False  
+
+        statuses = self.bus.sync_read("Homing_Status", steppers, normalize=False)
+        return all(statuses[motor] == 2 for motor in steppers)
 
     def calibrate(self) -> None:
         logger.info(f"\nRunning calibration of {self}")
+        script_path = os.path.join(os.path.dirname(__file__), 'configure_all_steppers.py')
+        script_path = os.path.abspath(script_path)
+        subprocess.run([sys.executable, script_path], check=True)
         self.bus.disable_torque()
-        for motor in self.bus.motors:
-            self.bus.write("Operating_Mode", motor, OperatingMode.POSITION.value)
 
         input(f"Move {self} to the middle of its range of motion (with gripper open) and press ENTER....")
-        homing_offsets = self.bus.set_half_turn_homings()
+
+        actual_positions = self.bus.sync_read("Present_Position", normalize=False)
+
+        homing_offsets = self.bus._get_half_turn_homings(actual_positions)
 
         range_mins = {
             "base_to_arm": 0,
@@ -137,17 +149,14 @@ class Ned2(Robot):
                 range_max=range_maxes[motor],
             )
 
-        self.bus.write_calibration(self.calibration)
         self._save_calibration()
         logger.info(f"Calibration saved to {self.calibration_fpath}")
 
     def configure(self) -> None:
         with self.bus.torque_disabled():
-            self.bus.configure_motors()
-            # Use ' position mode' for all motors. TODO (@phantson) : Check whith Thomas Escalon if this is correct.
-            for motor in self.bus.motors:
-                    self.bus.write("Operating_Mode", motor, OperatingMode.POSITION.value)
-
+            for motor, m in self.bus.motors.items():
+                if m.model != "stepper":
+                    self.bus.write("Return_Delay_Time", motor, 0)
 
     def setup_motors(self) -> None:
         """unimplemented"""
