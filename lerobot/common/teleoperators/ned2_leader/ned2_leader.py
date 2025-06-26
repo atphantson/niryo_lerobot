@@ -133,6 +133,7 @@ class Ned2Leader(Teleoperator):
             for motor, m in self.bus.motors.items():
                 if m.model != "stepper":
                     self.bus.write("Return_Delay_Time", motor, 0)
+        self.bus.disable_torque()
 
     def setup_motors(self) -> None:
         pass
