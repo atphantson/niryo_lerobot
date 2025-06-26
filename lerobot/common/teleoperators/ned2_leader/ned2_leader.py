@@ -92,7 +92,7 @@ class Ned2Leader(Teleoperator):
     def calibrate(self) -> None:
         logger.info(f"\nRunning calibration of {self}")
         # On va chercher le script du follower
-        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../robots/ned2/configure_all_steppers.py'))
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'configure_all_steppers_of_teleop.py'))
         subprocess.run([sys.executable, script_path], check=True)
         self.bus.disable_torque()
         input(f"Move {self} to the middle of its range of motion (with gripper open) and press ENTER....")

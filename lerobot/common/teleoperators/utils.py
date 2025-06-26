@@ -53,5 +53,9 @@ def make_teleoperator_from_config(config: TeleoperatorConfig) -> Teleoperator:
         from .keyboard.teleop_keyboard import KeyboardEndEffectorTeleop
 
         return KeyboardEndEffectorTeleop(config)
+    elif config.type == "ned2_leader":
+        from .ned2_leader import Ned2Leader
+
+        return Ned2Leader(config)
     else:
         raise ValueError(config.type)

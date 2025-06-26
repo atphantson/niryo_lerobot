@@ -138,7 +138,7 @@ def read_register(packetHandler, portHandler, motor_id, address, byte_length):
         raise Exception(f"error reading register {address}: comm={dxl_comm_result}, err={dxl_error}")
     return value
 
-def calibrate_all_steppers(port_name="/tmp/ttyVIRTUAL", baudrate=1000000, timeout=30):
+def calibrate_all_steppers(port_name="/tmp/ttyVIRTUAL1", baudrate=1000000, timeout=30):
     portHandler = PortHandler(port_name)
     packetHandler = PacketHandler(2.0)
 
