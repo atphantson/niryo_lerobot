@@ -170,8 +170,9 @@ class Ned2(Robot):
 
         # Read arm position
         start = time.perf_counter()
-        obs_dict[OBS_STATE] = self.bus.sync_read("Present_Position")
-        obs_dict = {f"{motor}.pos": val for motor, val in obs_dict.items()}
+        positions = self.bus.sync_read("Present_Position", num_retry=10)
+        for motor, val in positions.items():
+            obs_dict[f"{motor}.pos"] = val
         dt_ms = (time.perf_counter() - start) * 1e3
         logger.debug(f"{self} read state: {dt_ms:.1f}ms")
 
